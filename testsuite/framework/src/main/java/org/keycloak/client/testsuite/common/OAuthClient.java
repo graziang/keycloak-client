@@ -31,12 +31,19 @@ import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.TokenUtil;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
+import static org.keycloak.testsuite.util.ServerURLs.removeDefaultPorts;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  * @author Stan Silvert ssilvert@redhat.com (C) 2016 Red Hat Inc.
  */
 public class OAuthClient {
+
+    public static String SERVER_ROOT;
+    public static String AUTH_SERVER_ROOT;
+    public static String APP_ROOT;
+    public static String APP_AUTH_ROOT;
 
     private String realm;
     private String clientId;
@@ -45,6 +52,9 @@ public class OAuthClient {
 
     private final CloseableHttpClient httpClient;
 
+    static {
+        updateURLs(getAuthServerContextRoot());
+    }
     public OAuthClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -57,6 +67,11 @@ public class OAuthClient {
     public OAuthClient clientId(String clientId) {
         this.clientId = clientId;
         return this;
+    }
+
+    public static void updateURLs(String serverRoot) {
+        SERVER_ROOT = removeDefaultPorts(serverRoot);
+        AUTH_SERVER_ROOT = SERVER_ROOT + "/auth";
     }
 
     public AccessTokenResponse doGrantAccessTokenRequest(String clientSecret, String username, String password) {

@@ -101,11 +101,12 @@ public class Keycloak implements AutoCloseable {
     private BearerAuthFilter newAuthFilter() {
         return authToken != null ? new BearerAuthFilter(authToken) : new BearerAuthFilter(tokenManager);
     }
-    
     public static Keycloak getInstance(String serverUrl, String realm, String username, String password, String clientId, String clientSecret, SSLContext sslContext, Object customJacksonProvider, boolean disableTrustManager, String authToken, String scope) {
         return new Keycloak(serverUrl, realm, username, password, clientId, clientSecret, PASSWORD, newRestEasyClient(customJacksonProvider, sslContext, disableTrustManager), authToken, scope);
     }
-
+    public static Keycloak getInstance(String serverUrl, String realm, String username, String password, String grantType, String clientId, String clientSecret, SSLContext sslContext, Object customJacksonProvider, boolean disableTrustManager, String authToken, String scope) {
+        return new Keycloak(serverUrl, realm, username, password, clientId, clientSecret, grantType, newRestEasyClient(customJacksonProvider, sslContext, disableTrustManager), authToken, scope);
+    }
     public static Keycloak getInstance(String serverUrl, String realm, String username, String password, String clientId, String clientSecret, SSLContext sslContext, Object customJacksonProvider, boolean disableTrustManager, String authToken) {
         return new Keycloak(serverUrl, realm, username, password, clientId, clientSecret, PASSWORD, newRestEasyClient(customJacksonProvider, sslContext, disableTrustManager), authToken, null);
     }
