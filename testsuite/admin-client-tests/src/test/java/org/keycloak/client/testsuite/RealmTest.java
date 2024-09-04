@@ -23,20 +23,24 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
-import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.client.testsuite.common.Creator;
+import org.keycloak.client.testsuite.framework.KeycloakVersion;
 import org.keycloak.events.EventType;
 import org.keycloak.models.AdminRoles;
 import org.keycloak.models.CibaConfig;
 import org.keycloak.models.Constants;
 import org.keycloak.models.OAuth2DeviceConfig;
 import org.keycloak.models.ParConfig;
+import org.keycloak.models.RealmAttributes;
 import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.ComponentRepresentation;
 import org.keycloak.representations.idm.RealmEventsConfigRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.testsuite.client.Keycloak;
 import org.keycloak.testsuite.util.AdminClientUtil;
+import org.keycloak.testsuite.util.RealmBuilder;
 import org.keycloak.testsuite.util.UserBuilder;
 import org.keycloak.util.JsonSerialization;
 import org.testcontainers.shaded.org.hamcrest.CoreMatchers;
@@ -58,7 +62,6 @@ import java.util.stream.Stream;
 import static io.smallrye.common.constraint.Assert.assertFalse;
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.hasItems;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.containsInAnyOrder;
@@ -73,6 +76,11 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.not;
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
 public class RealmTest extends AbstractAdminClientTest {
+
+    @Override
+    public List<RealmRepresentation> getRealmsForImport() {
+        return super.getRealmsForImport();
+    }
 
     @Test
     public void getRealms() {
@@ -158,6 +166,7 @@ public class RealmTest extends AbstractAdminClientTest {
     }
 
     @Test
+    @KeycloakVersion(min = "25.0.0")
     public void createRealmWithValidConsoleUris() throws Exception {
         var realmNameWithSpaces = "new realm";
 
@@ -195,6 +204,7 @@ public class RealmTest extends AbstractAdminClientTest {
 
         assertThat(clientUris, not(empty()));
         assertThat(clientUris, everyItem(containsString("/new%20realm/")));
+
 
         try (Keycloak client = AdminClientUtil.createAdminClient(true, realmNameWithSpaces,
                 "new-realm-admin", "password", Constants.ADMIN_CLI_CLIENT_ID, null)) {
@@ -351,32 +361,26 @@ public class RealmTest extends AbstractAdminClientTest {
         adminClient.realms().realm("attributes").remove();
     }
 
-//    @Test
-//    public void smtpPasswordSecret() {
-//        RealmRepresentation rep = RealmBuilder.create().build();
-//        rep.setRealm("realm-with-smtp");
-//        rep.getSmtpServer().put("user", "user");
-//        rep.getSmtpServer().put("password", "secret");
-//
-//        adminClient.realms().create(rep);
-//
-//        RealmRepresentation returned = adminClient.realm("realm-with-smtp").toRepresentation();
-//        assertEquals(ComponentRepresentation.SECRET_VALUE, returned.getSmtpServer().get("password"));
-//
-//        KeycloakTestingClient.Server serverClient = testingClient.server("realm-with-smtp");
-//
-//        RealmRepresentation internalRep = serverClient.fetch(RunHelpers.internalRealm());
-//        assertEquals("secret", internalRep.getSmtpServer().get("password"));
-//
-//        adminClient.realm("realm-with-smtp").update(rep);
-//
-//
-//
-//        RealmRepresentation realm = adminClient.realms().findAll().stream().filter(r -> r.getRealm().equals("realm-with-smtp")).findFirst().get();
-//        assertEquals(ComponentRepresentation.SECRET_VALUE, realm.getSmtpServer().get("password"));
-//
-//        adminClient.realms().realm("realm-with-smtp").remove();
-//    }
+    @Test
+    public void smtpPasswordSecret() {
+        RealmRepresentation rep = RealmBuilder.create().testMail().build();
+        rep.setRealm("realm-with-smtp");
+        rep.getSmtpServer().put("user", "user");
+        rep.getSmtpServer().put("password", "secret");
+
+        adminClient.realms().create(rep);
+
+        RealmRepresentation returned = adminClient.realm("realm-with-smtp").toRepresentation();
+        assertEquals(ComponentRepresentation.SECRET_VALUE, returned.getSmtpServer().get("password"));
+
+        adminClient.realm("realm-with-smtp").update(rep);
+
+
+        RealmRepresentation realm = adminClient.realms().findAll().stream().filter(r -> r.getRealm().equals("realm-with-smtp")).findFirst().get();
+        assertEquals(ComponentRepresentation.SECRET_VALUE, realm.getSmtpServer().get("password"));
+
+        adminClient.realms().realm("realm-with-smtp").remove();
+    }
 
     @Test
     public void createRealmCheckDefaultPasswordPolicy() {
@@ -454,6 +458,7 @@ public class RealmTest extends AbstractAdminClientTest {
     }
 
     @Test
+    @KeycloakVersion(min = "25.0.0")
     public void removeMasterRealm() {
         // any attempt to remove the master realm should fail.
         try {
@@ -564,6 +569,7 @@ public class RealmTest extends AbstractAdminClientTest {
     }
 
     @Test
+    @KeycloakVersion(min = "26.0.0")
     public void updateRealm() {
         // first change
         RealmRepresentation rep = realm.toRepresentation();
@@ -615,6 +621,7 @@ public class RealmTest extends AbstractAdminClientTest {
 
         rep.setAccessCodeLifespanLogin(0);
         rep.setAccessCodeLifespanUserAction(0);
+
         try {
             realm.update(rep);
             fail("Not expected to successfully update the realm");
@@ -623,7 +630,6 @@ public class RealmTest extends AbstractAdminClientTest {
             assertEquals("HTTP 400 Bad Request", expected.getMessage());
         }
     }
-
     @Test
     public void updateRealmWithNewRepresentation() {
         // first change
@@ -831,321 +837,88 @@ public class RealmTest extends AbstractAdminClientTest {
         if (realm.isUserManagedAccessAllowed() != null) assertEquals(realm.isUserManagedAccessAllowed(), storedRealm.isUserManagedAccessAllowed());
     }
 
-//    @Test
-//    public void clearRealmCache() {
-//        RealmRepresentation realmRep = realm.toRepresentation();
-//        assertTrue(testingClient.testing().cache("realms").contains(realmRep.getId()));
-//
-//        realm.clearRealmCache();
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, "clear-realm-cache", ResourceType.REALM);
-//
-//        assertFalse(testingClient.testing().cache("realms").contains(realmRep.getId()));
-//    }
-//
-//    @Test
-//    public void clearUserCache() {
-//        UserRepresentation user = new UserRepresentation();
-//        user.setUsername("clearcacheuser");
-//        Response response = realm.users().create(user);
-//        String userId = ApiUtil.getCreatedId(response);
-//        response.close();
-//        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AdminEventPaths.userResourcePath(userId), user, ResourceType.USER);
-//
-//        realm.users().get(userId).toRepresentation();
-//
-//        assertTrue(testingClient.testing().cache("users").contains(userId));
-//
-//        realm.clearUserCache();
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, "clear-user-cache", ResourceType.REALM);
-//
-//        assertFalse(testingClient.testing().cache("users").contains(userId));
-//    }
-//
-//    // NOTE: clearKeysCache tested in KcOIDCBrokerWithSignatureTest
-//
-//    @Test
-//    public void pushNotBefore() {
-//        setupTestAppAndUser();
-//
-//        int time = Time.currentTime() - 60;
-//
-//        RealmRepresentation rep = realm.toRepresentation();
-//        rep.setNotBefore(time);
-//        realm.update(rep);
-//        assertAdminEvents.assertEvent(realmId, OperationType.UPDATE, Matchers.nullValue(String.class), rep, ResourceType.REALM);
-//
-//        GlobalRequestResult globalRequestResult = realm.pushRevocation();
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, "push-revocation", globalRequestResult, ResourceType.REALM);
-//
-//        assertThat(globalRequestResult.getSuccessRequests(), containsInAnyOrder(oauth.AUTH_SERVER_ROOT + "/realms/master/app/admin"));
-//        assertNull(globalRequestResult.getFailedRequests());
-//
-//        PushNotBeforeAction adminPushNotBefore = testingClient.testApp().getAdminPushNotBefore();
-//        assertEquals(time, adminPushNotBefore.getNotBefore());
-//    }
-//
-//    @Test
-//    public void pushNotBeforeWithSamlApp() {
-//        setupTestAppAndUser();
-//        setupTestSamlApp();
-//
-//        int time = Time.currentTime() - 60;
-//
-//        RealmRepresentation rep = realm.toRepresentation();
-//        rep.setNotBefore(time);
-//        realm.update(rep);
-//        assertAdminEvents.assertEvent(realmId, OperationType.UPDATE, Matchers.nullValue(String.class), rep, ResourceType.REALM);
-//
-//        GlobalRequestResult globalRequestResult = realm.pushRevocation();
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, "push-revocation", globalRequestResult, ResourceType.REALM);
-//
-//        assertThat(globalRequestResult.getSuccessRequests(), containsInAnyOrder(oauth.AUTH_SERVER_ROOT + "/realms/master/app/admin"));
-//        assertThat(globalRequestResult.getFailedRequests(), containsInAnyOrder(oauth.AUTH_SERVER_ROOT + "/realms/master/saml-app/saml"));
-//
-//        PushNotBeforeAction adminPushNotBefore = testingClient.testApp().getAdminPushNotBefore();
-//        assertEquals(time, adminPushNotBefore.getNotBefore());
-//    }
-//
-//    @Test
-//    public void logoutAll() {
-//        setupTestAppAndUser();
-//
-//        Response response = realm.users().create(UserBuilder.create().username("user").build());
-//        String userId = ApiUtil.getCreatedId(response);
-//        response.close();
-//        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AdminEventPaths.userResourcePath(userId), ResourceType.USER);
-//
-//        realm.users().get(userId).resetPassword(CredentialBuilder.create().password("password").build());
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, AdminEventPaths.userResetPasswordPath(userId), ResourceType.USER);
-//
-//        oauth.doLogin("user", "password");
-//
-//        GlobalRequestResult globalRequestResult = realm.logoutAll();
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, "logout-all", globalRequestResult, ResourceType.REALM);
-//
-//        assertEquals(1, globalRequestResult.getSuccessRequests().size());
-//        assertEquals(oauth.AUTH_SERVER_ROOT + "/realms/master/app/admin", globalRequestResult.getSuccessRequests().get(0));
-//        assertNull(globalRequestResult.getFailedRequests());
-//
-//        assertNotNull(testingClient.testApp().getAdminLogoutAction());
-//    }
-//
-//    @Test
-//    public void deleteSession() {
-//        setupTestAppAndUser();
-//
-//        oauth.doLogin("testuser", "password");
-//        AccessTokenResponse tokenResponse = oauth.doAccessTokenRequest(oauth.getCurrentQuery().get(OAuth2Constants.CODE), "secret");
-//        assertEquals(200, tokenResponse.getStatusCode());
-//
-//        EventRepresentation event = events.poll();
-//        assertNotNull(event);
-//
-//        realm.deleteSession(event.getSessionId(), false);
-//        assertAdminEvents.assertEvent(realmId, OperationType.DELETE, AdminEventPaths.deleteSessionPath(event.getSessionId()), ResourceType.USER_SESSION);
-//        try {
-//            realm.deleteSession(event.getSessionId(), false);
-//            fail("Expected 404");
-//        } catch (NotFoundException e) {
-//            // Expected
-//            assertAdminEvents.assertEmpty();
-//        }
-//
-//        tokenResponse = oauth.doRefreshTokenRequest(tokenResponse.getRefreshToken(), "secret");
-//        assertEquals(400, tokenResponse.getStatusCode());
-//        assertEquals("Session not active", tokenResponse.getErrorDescription());
-//    }
-//
-//    @Test
-//    public void clientSessionStats() {
-//        setupTestAppAndUser();
-//
-//        List<Map<String, String>> sessionStats = realm.getClientSessionStats();
-//        assertTrue(sessionStats.isEmpty());
-//
-//        System.out.println(sessionStats.size());
-//
-//        oauth.doLogin("testuser", "password");
-//        AccessTokenResponse tokenResponse = oauth.doAccessTokenRequest(oauth.getCurrentQuery().get(OAuth2Constants.CODE),
-//                "secret");
-//        assertEquals(200, tokenResponse.getStatusCode());
-//
-//        sessionStats = realm.getClientSessionStats();
-//
-//        assertEquals(1, sessionStats.size());
-//        assertEquals("test-app", sessionStats.get(0).get("clientId"));
-//        assertEquals("1", sessionStats.get(0).get("active"));
-//
-//        String clientUuid = sessionStats.get(0).get("id");
-//        realm.clients().get(clientUuid).remove();
-//
-//        sessionStats = realm.getClientSessionStats();
-//
-//        assertEquals(0, sessionStats.size());
-//    }
-//
-//    @Test
-//    // KEYCLOAK-17342
-//    public void testDefaultSignatureAlgorithm() {
-//        RealmRepresentation rep = new RealmRepresentation();
-//        rep.setRealm("new-realm");
-//
-//        adminClient.realms().create(rep);
-//        getCleanup()
-//                .addCleanup(() -> adminClient.realms().realm("new-realm").remove());
-//
-//        assertEquals(Constants.DEFAULT_SIGNATURE_ALGORITHM, adminClient.realm("master").toRepresentation().getDefaultSignatureAlgorithm());
-//        assertEquals(Constants.DEFAULT_SIGNATURE_ALGORITHM, adminClient.realm("new-realm").toRepresentation().getDefaultSignatureAlgorithm());
-//    }
-//
-//    @Test
-//    public void testSupportedOTPApplications() {
-//        RealmRepresentation rep = new RealmRepresentation();
-//        rep.setRealm("new-realm");
-//
-//        adminClient.realms().create(rep);
-//
-//        RealmResource realm = adminClient.realms().realm("new-realm");
-//        getCleanup()
-//                .addCleanup(() -> adminClient.realms().realm("new-realm").remove());
-//
-//        rep = realm.toRepresentation();
-//
-//        List<String> supportedApplications = rep.getOtpSupportedApplications();
-//        assertThat(supportedApplications, hasSize(3));
-//        assertThat(supportedApplications, containsInAnyOrder("totpAppGoogleName", "totpAppFreeOTPName", "totpAppMicrosoftAuthenticatorName"));
-//
-//        rep.setOtpPolicyDigits(8);
-//        realm.update(rep);
-//
-//        rep = realm.toRepresentation();
-//
-//        supportedApplications = rep.getOtpSupportedApplications();
-//        assertThat(supportedApplications, hasSize(2));
-//        assertThat(supportedApplications, containsInAnyOrder("totpAppFreeOTPName", "totpAppGoogleName"));
-//
-//        rep.setOtpPolicyType("hotp");
-//        realm.update(rep);
-//
-//        rep = realm.toRepresentation();
-//
-//        supportedApplications = rep.getOtpSupportedApplications();
-//        assertThat(supportedApplications, hasSize(2));
-//        assertThat(supportedApplications, containsInAnyOrder("totpAppFreeOTPName", "totpAppGoogleName"));
-//    }
-//
-//    private void setupTestAppAndUser() {
-//        testingClient.testApp().clearAdminActions();
-//
-//        String redirectUri = oauth.getRedirectUri().replace("/master/", "/" + REALM_NAME + "/");
-//
-//        ClientRepresentation client = new ClientRepresentation();
-//        client.setClientId("test-app");
-//        client.setAdminUrl(suiteContext.getAuthServerInfo().getContextRoot() + "/auth/realms/master/app/admin");
-//        client.setRedirectUris(Collections.singletonList(redirectUri));
-//        client.setProtocol(OIDCLoginProtocol.LOGIN_PROTOCOL);
-//        client.setSecret("secret");
-//        Response resp = realm.clients().create(client);
-//        String clientDbId = ApiUtil.getCreatedId(resp);
-//        getCleanup().addClientUuid(clientDbId);
-//        resp.close();
-//
-//        client.setSecret("**********"); // secrets are masked in events
-//        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AdminEventPaths.clientResourcePath(clientDbId), client, ResourceType.CLIENT);
-//
-//        oauth.realm(REALM_NAME);
-//        oauth.redirectUri(redirectUri);
-//
-//        UserRepresentation userRep = UserBuilder.create().username("testuser").build();
-//        Response response = realm.users().create(userRep);
-//        String userId = ApiUtil.getCreatedId(response);
-//        response.close();
-//        getCleanup().addUserId(userId);
-//        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AdminEventPaths.userResourcePath(userId), userRep, ResourceType.USER);
-//
-//        realm.users().get(userId).resetPassword(CredentialBuilder.create().password("password").build());
-//        assertAdminEvents.assertEvent(realmId, OperationType.ACTION, AdminEventPaths.userResetPasswordPath(userId), ResourceType.USER);
-//
-//        testingClient.testApp().clearAdminActions();
-//    }
-//
-//    private void setupTestSamlApp() {
-//        String redirectUri = oauth.getRedirectUri().replace("/master/", "/" + REALM_NAME + "/");
-//        ClientRepresentation client = ClientBuilder.create()
-//                .clientId("test-saml-app")
-//                .protocol(SamlProtocol.LOGIN_PROTOCOL)
-//                .adminUrl(suiteContext.getAuthServerInfo().getContextRoot() + "/auth/realms/master/saml-app/saml")
-//                .addRedirectUri(redirectUri)
-//                .secret("secret")
-//                .build();
-//        Response resp = realm.clients().create(client);
-//        String clientDbId = ApiUtil.getCreatedId(resp);
-//        getCleanup().addClientUuid(clientDbId);
-//        resp.close();
-//
-//        client.setSecret("**********"); // secrets are masked in events
-//        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AdminEventPaths.clientResourcePath(clientDbId), client, ResourceType.CLIENT);
-//    }
-//
-//    @Test
-//    public void testNoUserProfileProviderComponentUponRealmChange() {
-//        String realmName = "new-realm";
-//        RealmRepresentation rep = new RealmRepresentation();
-//        rep.setRealm(realmName);
-//
-//        adminClient.realms().create(rep);
-//        getCleanup().addCleanup(() -> adminClient.realms().realm(realmName).remove());
-//
-//        assertThat(adminClient.realm(realmName).components().query(null, UserProfileProvider.class.getName()), empty());
-//
-//        rep.setDisplayName("displayName");
-//        adminClient.realm(realmName).update(rep);
-//
-//        // this used to return non-empty collection
-//        assertThat(adminClient.realm(realmName).components().query(null, UserProfileProvider.class.getName()), empty());
-//    }
-//
-//    @Test
-//    public void testSetEmptyAttributeValues() {
-//        String realmName = "testSetEmptyAttributeValues";
-//        RealmRepresentation rep = new RealmRepresentation();
-//        rep.setRealm(realmName);
-//        rep.setAttributes(new HashMap<>());
-//        rep.getAttributes().put("myboolean", "");
-//        rep.getAttributes().put("mylong", "");
-//        rep.getAttributes().put("myint", "");
-//        rep.getAttributes().put(RealmAttributes.ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN + ".something", "");
-//
-//        adminClient.realms().create(rep);
-//
-//        try {
-//            adminClient.realm(realmName);
-//
-//            testingClient.server().run(session -> {
-//                RealmModel realm = session.realms().getRealmByName(realmName);
-//                Assert.assertTrue(realm instanceof org.keycloak.models.cache.infinispan.RealmAdapter);
-//
-//                Assert.assertNull(realm.getUserActionTokenLifespans().get("something"));
-//                Assert.assertEquals(true, realm.getAttribute("myboolean", true));
-//                Assert.assertEquals(Long.valueOf(123), realm.getAttribute("mylong", (long) 123));
-//                Assert.assertEquals(Integer.valueOf(1234), realm.getAttribute("myint", 1234));
-//
-//                RealmProvider delegate = session.getProvider(CacheRealmProvider.class).getRealmDelegate();
-//                RealmModel realm2 = delegate.getRealm(realm.getId());
-//                Assert.assertTrue(realm2 instanceof org.keycloak.models.jpa.RealmAdapter);
-//
-//                Assert.assertNull(realm2.getUserActionTokenLifespans().get("something"));
-//                Assert.assertEquals(true, realm2.getAttribute("myboolean", true));
-//                Assert.assertEquals(Long.valueOf(123), realm2.getAttribute("mylong", (long) 123));
-//                Assert.assertEquals(Integer.valueOf(1234), realm2.getAttribute("myint", 1234));
-//            });
-//        } finally {
-//            adminClient.realm(realmName).remove();
-//        }
-//    }
+    // NOTE: clearKeysCache tested in KcOIDCBrokerWithSignatureTest
+    @Test
+    // KEYCLOAK-17342
+    public void testDefaultSignatureAlgorithm() {
+        RealmRepresentation rep = new RealmRepresentation();
+        rep.setRealm("new-realm");
 
-    @Override
-    public List<RealmRepresentation> getRealmsForImport() {
-        return super.getRealmsForImport();
+        adminClient.realms().create(rep);
+
+        assertEquals(Constants.DEFAULT_SIGNATURE_ALGORITHM, adminClient.realm("master").toRepresentation().getDefaultSignatureAlgorithm());
+        assertEquals(Constants.DEFAULT_SIGNATURE_ALGORITHM, adminClient.realm("new-realm").toRepresentation().getDefaultSignatureAlgorithm());
+        adminClient.realms().realm("new-realm").remove();
+    }
+
+    @KeycloakVersion(min = "25.0.0")
+    @Test
+    public void testSupportedOTPApplications() {
+        RealmRepresentation rep = new RealmRepresentation();
+        rep.setRealm("new-realm");
+
+        adminClient.realms().create(rep);
+
+        RealmResource realm = adminClient.realms().realm("new-realm");
+
+        rep = realm.toRepresentation();
+
+        List<String> supportedApplications = rep.getOtpSupportedApplications();
+        assertThat(supportedApplications, hasSize(3));
+        assertThat(supportedApplications, containsInAnyOrder("totpAppGoogleName", "totpAppFreeOTPName", "totpAppMicrosoftAuthenticatorName"));
+
+        rep.setOtpPolicyDigits(8);
+        realm.update(rep);
+
+        rep = realm.toRepresentation();
+
+        supportedApplications = rep.getOtpSupportedApplications();
+        assertThat(supportedApplications, hasSize(2));
+        assertThat(supportedApplications, containsInAnyOrder("totpAppFreeOTPName", "totpAppGoogleName"));
+
+        rep.setOtpPolicyType("hotp");
+        realm.update(rep);
+
+        rep = realm.toRepresentation();
+
+        supportedApplications = rep.getOtpSupportedApplications();
+        assertThat(supportedApplications, hasSize(2));
+        assertThat(supportedApplications, containsInAnyOrder("totpAppFreeOTPName", "totpAppGoogleName"));
+        adminClient.realms().realm("new-realm").remove();
+    }
+
+    @Test
+    public void testNoUserProfileProviderComponentUponRealmChange() {
+        String realmName = "new-realm";
+        RealmRepresentation rep = new RealmRepresentation();
+        rep.setRealm(realmName);
+
+        adminClient.realms().create(rep);
+
+        assertThat(adminClient.realm(realmName).components().query(null, "UserProfileProvider"), empty());
+
+        rep.setDisplayName("displayName");
+        adminClient.realm(realmName).update(rep);
+
+        // this used to return non-empty collection
+        assertThat(adminClient.realm(realmName).components().query(null, "UserProfileProvider"), empty());
+
+        adminClient.realms().realm(realmName).remove();
+    }
+
+    @Test
+    public void testSetEmptyAttributeValues() {
+        String realmName = "testSetEmptyAttributeValues";
+        RealmRepresentation rep = new RealmRepresentation();
+        rep.setRealm(realmName);
+        rep.setAttributes(new HashMap<>());
+        rep.getAttributes().put("myboolean", "");
+        rep.getAttributes().put(RealmAttributes.ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN + ".something", "");
+
+        adminClient.realms().create(rep);
+
+        RealmRepresentation realmRepresentation = adminClient.realms().realm(realmName).toRepresentation();
+        Assert.assertNotNull(realmRepresentation.getAttributes().get("myboolean"));
+        adminClient.realm(realmName).remove();
     }
 }

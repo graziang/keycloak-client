@@ -99,4 +99,18 @@ public abstract class AbstractAdminClientTest implements RealmRepsSupplier {
             throw new RuntimeException("Failed to parse json", e);
         }
     }
+
+    public int getKeycloakMajorVersion() {
+        String currentVersion = adminClient.serverInfo().getInfo().getSystemInfo().getVersion();
+
+        if (currentVersion == null) {
+            return -1;
+        }
+        if (currentVersion.contains(".")) {
+            currentVersion = currentVersion.substring(0, currentVersion.indexOf("."));
+        }
+
+        return Integer.parseInt(currentVersion);
+
+    }
 }

@@ -25,8 +25,8 @@ import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ClientHttpEngineBuilder43;
 import org.keycloak.OAuth2Constants;
-import org.keycloak.admin.client.Keycloak;
 import org.keycloak.models.Constants;
+import org.keycloak.testsuite.client.Keycloak;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;

@@ -14,7 +14,7 @@ import static java.lang.Integer.parseInt;
 public class ServerURLs {
 
     public static final String AUTH_SERVER_URL = TestRegistry.INSTANCE.getOrCreateProvider(KeycloakServerProvider.class).getAuthServerUrl();
-    public static final String AUTH_SERVER_HOST = System.getProperty("auth.server.host", "localhost");
+    public static final String AUTH_SERVER_HOST = getAuthServerHost();
     public static final boolean AUTH_SERVER_SSL_REQUIRED = AUTH_SERVER_URL.startsWith("https");
     public static final String AUTH_SERVER_PORT = getAuthServerPort();
     public static final String AUTH_SERVER_SCHEME = AUTH_SERVER_SSL_REQUIRED ? "https" : "http";
@@ -23,6 +23,14 @@ public class ServerURLs {
         try {
             int port = new URL(AUTH_SERVER_URL).getPort();
             return String.valueOf(port);
+        } catch (MalformedURLException mue) {
+            throw new RuntimeException(mue);
+        }
+    }
+
+    private static String getAuthServerHost() {
+        try {
+            return new URL(AUTH_SERVER_URL).getHost();
         } catch (MalformedURLException mue) {
             throw new RuntimeException(mue);
         }
