@@ -30,7 +30,7 @@ runs:
       if: inputs.upload-m2-repo == 'true'
       shell: bash
       run: |
-        tar -C ~/ --use-compress-program zstd -cf m2-keycloak.tzts \
+        tar -C ~/ --use-compress-program zstd -cf m2-keycloak-client.tzts \
         --exclude '*.tar.gz' \
         .m2/repository/org/keycloak
 
@@ -39,6 +39,6 @@ runs:
       if: inputs.upload-m2-repo == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: m2-keycloak.tzts
-        path: m2-keycloak.tzts
+        name: m2-keycloak-client.tzts
+        path: m2-keycloak-client.tzts
         retention-days: 1
