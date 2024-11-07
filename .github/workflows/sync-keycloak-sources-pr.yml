@@ -34,6 +34,11 @@ jobs:
       - name: Sync Keycloak Sources
         run: ./.github/scripts/sync-keycloak-sources.sh
 
+      - name: Set git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Create New Branch
         run: |
           BRANCH_NAME="sync-with-keycloak-${{ env.branch_name }}"
