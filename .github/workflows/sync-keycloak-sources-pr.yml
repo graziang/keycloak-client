@@ -11,7 +11,7 @@ jobs:
         id: latest_release
         run: |
           LATEST_RELEASE=$(git ls-remote --heads https://github.com/keycloak/keycloak.git 'release/*' | awk -F'/' '{print $NF}' | sort -V | tail -n1)
-          echo "branch_name=$LATEST_RELEASE" >> $GITHUB_ENV
+          echo "branch_name=release/$LATEST_RELEASE" >> $GITHUB_ENV
 
       - name: Checkout Keycloak latest release
         uses: actions/checkout@v4
