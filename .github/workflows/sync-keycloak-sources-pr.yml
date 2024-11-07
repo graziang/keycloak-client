@@ -45,12 +45,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
-          BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
+          BRANCH_NAME="sync-with-keycloak-server-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
           git add .
-          git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
+          git commit -m "Sync with Keycloak server release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}" --author="${GITHUB_ACTOR} <${GITHUB_ACTOR}@users.noreply.github.com>"
           git push --set-upstream origin $BRANCH_NAME
 
       - name: Create Pull Request with gh CLI
         run: |
-          gh pr create --base main --head "$BRANCH_NAME" --title "Sync with Keycloak $BRANCH_NAME" --body "This PR syncs keycloak-client with the latest Keycloak release branch $BRANCH_NAME."
+          PR_TITLE="Sync with Keycloak server ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S) branch"
+          PR_BODY="This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
+          gh pr create --base main --head "$BRANCH_NAME" --title "$PR_TITLE" --body "$PR_BODY"
