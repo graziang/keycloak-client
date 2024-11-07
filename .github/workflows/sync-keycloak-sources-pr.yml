@@ -19,8 +19,8 @@ jobs:
           repository: keycloak/keycloak
           ref: ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
 
- #     - name: Build Keycloak
-   #     uses: ./.github/actions/build-keycloak
+      - name: Build Keycloak
+        uses: ./.github/actions/build-keycloak
 
       - name: Checkout keycloak-client
         uses: actions/checkout@v4
@@ -31,11 +31,12 @@ jobs:
       - name: Build Keycloak Client
         uses: ./.github/actions/build-keycloak-client
 
-#      - name: Sync Keycloak Sources
-    #    run: ./.github/scripts/sync-keycloak-sources.sh
+      - name: Sync Keycloak Sources
+        run: ./.github/scripts/sync-keycloak-sources.sh
 
-      - name: Set git config
+      - name: Config
         run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -43,18 +44,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
+          find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
+          BRANCH_NAME="sync-with-keycloak:${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
-          echo "Questo è un nuovo file di esempio." > nuovo-file.txt
-          git add nuovo-file.txt
+          git add .
           git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git push --set-upstream origin $BRANCH_NAME
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
-          title: "Sync with Keycloak ${env.KEYCLOAK_RELEASE_BRANCH_NAME}"
-          body: "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}."
-          base: main
+      - name: Create Pull Request with gh CLI
+        run: |
+          gh pr create --base main --head "$BRANCH_NAME" --title "Sync with Keycloak ${env.KEYCLOAK_RELEASE_BRANCH_NAME}" --body "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}."
