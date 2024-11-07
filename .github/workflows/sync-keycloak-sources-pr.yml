@@ -19,6 +19,8 @@ jobs:
           repository: keycloak/keycloak
           ref: ${{ env.branch_name }}
 
+      - name: Build Keycloak
+        uses: ./.github/actions/build-keycloak
 
       - name: Checkout keycloak-client
         uses: actions/checkout@v4
