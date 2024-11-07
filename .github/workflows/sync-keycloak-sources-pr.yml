@@ -10,7 +10,7 @@ jobs:
       - name: Checkout keycloak-client
         uses: actions/checkout@v3
         with:
-          repository: keycloak/keycloak-client
+          repository: graziang/keycloak-client
           ref: main
 
       - name: Find latest release branch
