@@ -19,8 +19,8 @@ jobs:
           repository: keycloak/keycloak
           ref: ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
 
-      - name: Build Keycloak
-        uses: ./.github/actions/build-keycloak
+ #     - name: Build Keycloak
+   #     uses: ./.github/actions/build-keycloak
 
       - name: Checkout keycloak-client
         uses: actions/checkout@v4
@@ -31,8 +31,8 @@ jobs:
       - name: Build Keycloak Client
         uses: ./.github/actions/build-keycloak-client
 
-      - name: Sync Keycloak Sources
-        run: ./.github/scripts/sync-keycloak-sources.sh
+#      - name: Sync Keycloak Sources
+    #    run: ./.github/scripts/sync-keycloak-sources.sh
 
       - name: Set git config
         run: |
@@ -43,11 +43,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
+          echo "Questo è un nuovo file di esempio." > nuovo-file.txt
           BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git checkout -b $BRANCH_NAME
           git add .
-          git status
           git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git push --set-upstream origin $BRANCH_NAME
 
