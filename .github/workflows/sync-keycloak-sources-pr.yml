@@ -43,10 +43,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Questo è un nuovo file di esempio." > nuovo-file.txt
           BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git checkout -b $BRANCH_NAME
-          git add .
+          echo "Questo è un nuovo file di esempio." > nuovo-file.txt
+          git add nuovo-file.txt
           git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git push --set-upstream origin $BRANCH_NAME
 
