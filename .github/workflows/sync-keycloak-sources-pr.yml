@@ -11,13 +11,13 @@ jobs:
         id: latest_release
         run: |
           LATEST_RELEASE=$(git ls-remote --heads https://github.com/keycloak/keycloak.git 'release/*' | awk -F'/' '{print $NF}' | sort -V | tail -n1)
-          echo "branch_name=release/$LATEST_RELEASE" >> $GITHUB_ENV
+          echo "KEYCLOAK_RELEASE_BRANCH_NAME=release/$LATEST_RELEASE" >> $GITHUB_ENV
 
       - name: Checkout Keycloak latest release
         uses: actions/checkout@v4
         with:
           repository: keycloak/keycloak
-          ref: ${{ env.branch_name }}
+          ref: ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
 
       - name: Build Keycloak
         uses: ./.github/actions/build-keycloak
@@ -39,25 +39,21 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create New Branch
-        run: |
-          BRANCH_NAME="sync-with-keycloak-${{ env.branch_name }}"
-          git checkout -b $BRANCH_NAME
-          git add .
-          git commit -m "Sync with Keycloak release branch ${{ env.branch_name }}"
-
-      - name: Push Changes
+      - name: Create an push New Branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH_NAME="sync-with-keycloak-${{ env.branch_name }}"
+          BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
+          git checkout -b $BRANCH_NAME
+          git add .
+          git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git push --set-upstream origin $BRANCH_NAME
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: $BRANCH_NAME
+          branch: sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
           title: "Sync with Keycloak ${env.branch_name}"
           body: "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.branch_name }}."
           base: main
