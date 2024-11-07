@@ -43,9 +43,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
           BRANCH_NAME="sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git checkout -b $BRANCH_NAME
           git add .
+          git status
           git commit -m "Sync with Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}"
           git push --set-upstream origin $BRANCH_NAME
 
