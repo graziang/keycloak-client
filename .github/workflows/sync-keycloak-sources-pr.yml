@@ -20,14 +20,14 @@ jobs:
           ref: ${{ env.branch_name }}
 
 
-      - name: Sync Keycloak Sources
-        run: .github/scripts/sync-keycloak-sources.sh
-
       - name: Checkout keycloak-client
         uses: actions/checkout@v4
         with:
           repository: graziang/keycloak-client
           ref: main
+
+      - name: Sync Keycloak Sources
+        run: ./.github/scripts/sync-keycloak-sources.sh
 
       - name: Create New Branch
         run: |
