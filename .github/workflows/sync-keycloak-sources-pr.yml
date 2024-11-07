@@ -39,7 +39,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create an push New Branch
+      - name: Create and push new branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -54,6 +54,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: sync-with-keycloak-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
-          title: "Sync with Keycloak ${env.branch_name}"
-          body: "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.branch_name }}."
+          title: "Sync with Keycloak ${env.KEYCLOAK_RELEASE_BRANCH_NAME}"
+          body: "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}."
           base: main
