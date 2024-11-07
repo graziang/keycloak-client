@@ -28,6 +28,9 @@ jobs:
           repository: graziang/keycloak-client
           ref: main
 
+      - name: Build Keycloak Client
+        uses: ./.github/actions/build-keycloak-client
+
       - name: Sync Keycloak Sources
         run: ./.github/scripts/sync-keycloak-sources.sh
 
