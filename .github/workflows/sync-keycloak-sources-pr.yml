@@ -53,4 +53,4 @@ jobs:
 
       - name: Create Pull Request with gh CLI
         run: |
-          gh pr create --base main --head "$BRANCH_NAME" --title "Sync with Keycloak ${env.KEYCLOAK_RELEASE_BRANCH_NAME}" --body "This PR syncs keycloak-client with the latest Keycloak release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}."
+          gh pr create --base main --head "$BRANCH_NAME" --title "Sync with Keycloak $BRANCH_NAME" --body "This PR syncs keycloak-client with the latest Keycloak release branch $BRANCH_NAME."
