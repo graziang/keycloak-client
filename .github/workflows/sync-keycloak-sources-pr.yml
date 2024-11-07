@@ -50,6 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH_NAME="sync-with-keycloak-${{ env.branch_name }}"
           git push --set-upstream origin $BRANCH_NAME
 
       - name: Create Pull Request
