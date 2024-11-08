@@ -47,7 +47,7 @@ jobs:
           find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
           BRANCH_NAME="sync-with-keycloak-server-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
-          git add .
+          git add client-common-synced
           git commit -m "Sync with Keycloak server release branch ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}" --author="${GITHUB_ACTOR} <${GITHUB_ACTOR}@users.noreply.github.com>"
           git push --set-upstream origin $BRANCH_NAME
 
