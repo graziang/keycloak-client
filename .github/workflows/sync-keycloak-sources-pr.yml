@@ -44,7 +44,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
           BRANCH_NAME="sync-with-keycloak-server-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
           git add client-common-synced
