@@ -7,18 +7,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Java
-        id: setup-java
-        uses: ./.github/actions/java-setup
-
-      - name: Config
-        id: config
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Find latest Keycloak release branch
+      - name: Find latest release branch
         id: latest_release
         run: |
           LATEST_RELEASE=$(git ls-remote --heads https://github.com/keycloak/keycloak.git 'release/*' | awk -F'/' '{print $NF}' | sort -V | tail -n1)
@@ -31,10 +20,7 @@ jobs:
           ref: ${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}
 
       - name: Build Keycloak
-        id: build-keycloak
-        run: |
-          ./mvnw install -Pdistribution -am -pl distribution/maven-plugins/licenses-processor
-          ./mvnw -pl quarkus/deployment,quarkus/dist -am -DskipTests clean install 
+        uses: ./.github/actions/build-keycloak
 
       - name: Checkout keycloak-client
         uses: actions/checkout@v4
@@ -42,18 +28,23 @@ jobs:
           repository: graziang/keycloak-client
           ref: main
 
-      - name: Build Keycloak client
-        id: build-keycloak-client
-        run: |
-          mvn -B clean install dependency:resolve -Pnightly -DskipTests=true
+      - name: Build Keycloak Client
+        uses: ./.github/actions/build-keycloak-client
 
       - name: Sync Keycloak Sources
         run: ./.github/scripts/sync-keycloak-sources.sh
+
+      - name: Config
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create and push new branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          find . -type f -name "m2-keycloak-*.tzts" -exec rm -f {} \;
           BRANCH_NAME="sync-with-keycloak-server-${{ env.KEYCLOAK_RELEASE_BRANCH_NAME }}-$(date +%Y%m%d%H%M%S)"
           git checkout -b $BRANCH_NAME
           git add .
