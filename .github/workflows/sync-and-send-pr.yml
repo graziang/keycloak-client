@@ -40,7 +40,7 @@ jobs:
 
       - name: Config git and GitHub CLI
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_ACCESS_TOKEN }}
         run: |
           echo "${GITHUB_TOKEN}" | gh auth login --with-token
           git config --global user.name "${{ github.actor }}"
