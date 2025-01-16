@@ -11,6 +11,17 @@ jobs:
       KEYCLOAK_CLIENT_BRANCH: "main"
 
     steps:
+      - name: Config git and GitHub CLI
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PR_ACCESS_TOKEN }}
+        run: |
+          unset GITHUB_TOKEN
+          echo "${PERSONAL_ACCESS_TOKEN}" | gh auth login --with-token
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          echo "https://${PERSONAL_ACCESS_TOKEN}@github.com" > ~/.git-credentials
+          git config --global credential.helper store
+
       - name: Find latest Keycloak release branch
         id: latest_release
         run: |
@@ -37,17 +48,6 @@ jobs:
 
       - name: Sync Keycloak sources
         run: ./.github/scripts/sync-keycloak-sources.sh
-
-      - name: Config git and GitHub CLI
-        env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PR_ACCESS_TOKEN }}
-        run: |
-          unset GITHUB_TOKEN
-          echo "${PERSONAL_ACCESS_TOKEN}" | gh auth login --with-token
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          echo "https://${PERSONAL_ACCESS_TOKEN}@github.com" > ~/.git-credentials
-          git config --global credential.helper store
 
       - name: Check for changes
         id: changes_check
