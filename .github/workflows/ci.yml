@@ -13,7 +13,7 @@ jobs:
 
       - name: Build Keycloak Client Libs
         uses: ./.github/actions/build-keycloak-client
-
+sdfgsdfg
   client-tests:
     name: Client tests (Jakarta)
     runs-on: ubuntu-latest
