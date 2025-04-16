@@ -7,8 +7,8 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      REPO_HEAD: "keycloak"
-      KEYCLOAK_CLIENT_BRANCH: "main"
+      REPO_HEAD: "graziang"
+      KEYCLOAK_CLIENT_BRANCH: "issue-test-sync-134"
 
     steps:
       - name: Find latest Keycloak release branch
@@ -78,9 +78,6 @@ jobs:
               labels: labels
             });
             return response.data.number; 
-
-      - name: Use the issue number
-        run: echo "The created issue number is ${{ steps.create_issue.outputs.result }}"
 
       - name: Create and push new branch
         if: env.CHANGES_CHECK == 'true'
