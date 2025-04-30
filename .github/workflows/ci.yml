@@ -18,7 +18,6 @@ jobs:
 
       - name: Build Keycloak Client Libs
         uses: ./.github/actions/build-keycloak-client
-
   client-tests:
     name: Client tests
     needs: build
